@@ -1,0 +1,4 @@
+libiniparser.a
+libiniparser.so.0
+src/dictionary.o
+src/iniparser.o
