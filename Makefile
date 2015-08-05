@@ -60,3 +60,9 @@ docs:
 	
 check:
 	@(cd test ; $(MAKE))
+
+install:	libiniparser.a libiniparser.so.0
+	cp libiniparser.a libiniparser.so.0 $(DESTDIR)/usr/local/lib
+	cp src/iniparser.h /usr/local/include
+	cp src/dictionary.h /usr/local/include
+	ldconfig
