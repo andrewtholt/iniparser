@@ -15,10 +15,17 @@
 */
 /*---------------------------- Includes ------------------------------------*/
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "iniparser.h"
 
+#include "iniUtils.h"
+
+
 /*---------------------------- Defines -------------------------------------*/
-#define ASCIILINESZ         (1024)
+// #define ASCIILINESZ         (1024)
+#define ASCIILINESZ         (80)
 #define INI_INVALID_KEY     ((char*)-1)
 
 /*---------------------------------------------------------------------------
@@ -526,9 +533,8 @@ static line_status iniparser_line(
   The returned dictionary must be freed using iniparser_freedict().
  */
 /*--------------------------------------------------------------------------*/
-dictionary * iniparser_load(char * ininame)
-{
-    FILE * in ;
+dictionary * iniparser_load(char * ininame) {
+    int in ;
 
     char line    [ASCIILINESZ+1] ;
     char section [ASCIILINESZ+1] ;
@@ -543,14 +549,19 @@ dictionary * iniparser_load(char * ininame)
 
     dictionary * dict ;
 
-    if ((in=fopen(ininame, "r"))==NULL) {
+#ifdef LINUX
+    if ((in=open(ininame, O_RDONLY)) < 0) {
+#endif
+#ifdef FREERTOS
+    if ((in=yaffs_open(ininame, O_RDONLY)) < 0) {
+#endif
         fprintf(stderr, "iniparser: cannot open %s\n", ininame);
         return NULL ;
     }
 
     dict = dictionary_new(0) ;
     if (!dict) {
-        fclose(in);
+        close(in);
         return NULL ;
     }
 
@@ -560,7 +571,9 @@ dictionary * iniparser_load(char * ininame)
     memset(val,     0, ASCIILINESZ);
     last=0 ;
 
-    while (fgets(line+last, ASCIILINESZ-last, in)!=NULL) {
+//    while (fgets(line+last, ASCIILINESZ-last, in)!=NULL) {
+    while (readLine(in, line+last, ASCIILINESZ-last) > 0) {
+
         lineno++ ;
         len = (int)strlen(line)-1;
         if (len==0)
@@ -572,7 +585,7 @@ dictionary * iniparser_load(char * ininame)
                     ininame,
                     lineno);
             dictionary_del(dict);
-            fclose(in);
+            close(in);
             return NULL ;
         }
         /* Get rid of \n and spaces at end of line */
@@ -625,7 +638,7 @@ dictionary * iniparser_load(char * ininame)
         dictionary_del(dict);
         dict = NULL ;
     }
-    fclose(in);
+    close(in);
     return dict ;
 }
 

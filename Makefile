@@ -4,7 +4,8 @@
 
 # Compiler settings
 CC      = gcc
-CFLAGS  = -O2 -fPIC -Wall -ansi -pedantic
+# CFLAGS  = -O2 -fPIC -Wall # -pedantic -ansi
+CFLAGS  = -g -fPIC -Wall -DLINUX # -pedantic -ansi
 
 # Ar settings to build the library
 AR	    = ar
@@ -28,14 +29,15 @@ SUFFIXES = .o .c .h .a .so .sl
 COMPILE.c=$(CC) $(CFLAGS) -c
 .c.o:
 	@(echo "compiling $< ...")
-	@($(COMPILE.c) -o $@ $<)
+	$(COMPILE.c) -o $@ $<
 
 
 SRCS = src/iniparser.c \
-	   src/dictionary.c
+	   src/dictionary.c \
+	   src/iniUtils.c
 
 OBJS = $(SRCS:.c=.o)
-
+LIBOBJS = dictionary.o  iniparser.o  iniUtils.o
 
 default:	libiniparser.a libiniparser.so
 
